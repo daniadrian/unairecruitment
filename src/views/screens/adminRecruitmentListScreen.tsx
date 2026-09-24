@@ -6,15 +6,17 @@ import { formatDate } from '../../utils/dateFormat.ts'
 import AdminHeader from '../components/admin/adminHeader.tsx'
 import RecruitmentRowMenu from '../components/admin/recruitmentRowMenu.tsx'
 import EmptyRegister from '../components/brand/emptyRegister.tsx'
+import RecruitmentStatusTag from '../components/brand/recruitmentStatusTag.tsx'
 import ShortRef from '../components/brand/shortRef.tsx'
 import Notice from '../components/feedback/notice.tsx'
 import { redirectOnFailure } from '../components/guards/redirectOnFailure.ts'
 import { requireViewer } from '../components/guards/requireViewer.ts'
 import { buttonVariants } from '../components/ui/button.tsx'
 
-// Screen 08, UC-09: every recruitment with its ID, title, division, and a summary of the
-// description (F_UNAIREC_09_01), plus buttons to add and edit. There is no delete, close, or
-// visibility control (AB-04). Applicant totals come from the dashboard statistics.
+// Screen 08, UC-09: every recruitment with its ID, title, division, status, and a summary of the
+// description (F_UNAIREC_09_01), plus buttons to add and edit. There is no delete (AB-04); the
+// open/close toggle lives on the edit screen (RecruitmentStatusControl). Applicant totals come
+// from the dashboard statistics.
 
 const PATH = '/admin/recruitments'
 
@@ -117,9 +119,12 @@ export default async function AdminRecruitmentListScreen({ saved }: { saved: boo
                                                 </td>
                                                 <td className="px-4 py-3.5">
                                                     <div className="flex min-w-0 flex-col gap-0.5">
-                                                        <span className="font-display text-[17px] leading-[1.3] font-medium text-ink">
-                                                            {recruitment.title}
-                                                        </span>
+                                                        <div className="flex flex-wrap items-center gap-2">
+                                                            <span className="font-display text-[17px] leading-[1.3] font-medium text-ink">
+                                                                {recruitment.title}
+                                                            </span>
+                                                            <RecruitmentStatusTag status={recruitment.status} />
+                                                        </div>
                                                         <span className="text-[13.5px] text-ink-soft">
                                                             {recruitment.division}
                                                         </span>

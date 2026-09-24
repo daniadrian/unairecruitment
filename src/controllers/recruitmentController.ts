@@ -8,11 +8,13 @@ import type { FieldType } from '../types/fieldType.ts'
 import type { Recruitment } from '../models/entities/recruitment.ts'
 import type { RecruitmentDetail } from '../types/recruitments/recruitmentDetail.ts'
 import type { RecruitmentInput } from '../types/inputs/recruitmentInput.ts'
+import type { RecruitmentStatus } from '../types/recruitmentStatus.ts'
 
 // UC-05, UC-06, UC-09, UC-10, UC-11. AL-05: custom form field settings.
 
 const FIELD_TYPES: FieldType[] = ['TEXT', 'CHOICE', 'NUMBER', 'DATE', 'FILE']
 const FIELD_CATEGORIES: FieldCategory[] = ['REQUIRED', 'OPTIONAL']
+const RECRUITMENT_STATUSES: RecruitmentStatus[] = ['OPEN', 'CLOSED']
 
 const RECRUITMENT_COLUMN_LABELS: Record<string, string> = {
     title: 'Position Title',
@@ -30,6 +32,11 @@ export class RecruitmentController {
     // UC-05 and UC-09. AB-09: the recruitment list is visible without signing in.
     public async loadRecruitments(): Promise<Recruitment[]> {
         return this.recruitmentRepository.list()
+    }
+
+    // UC-05: the public "Openings" page only shows recruitments the admin has left open (AB-04).
+    public async loadOpenRecruitments(): Promise<Recruitment[]> {
+        return this.recruitmentRepository.listOpen()
     }
 
     // UC-06 and UC-11.
@@ -75,6 +82,25 @@ export class RecruitmentController {
         })
         if (!created) return fail('Could not save the recruitment. Please try again.', 'INTERNAL')
         return ok({ id: created.id })
+    }
+
+    // AB-04: opens or closes a recruitment. Admin only (L-5).
+    public async setStatus(
+        id: string,
+        status: RecruitmentStatus,
+    ): Promise<ActionResult<{ id: string; status: RecruitmentStatus }>> {
+        const user = await this.authRepository.getSessionUser()
+        if (!user) return fail('Session not found. Please sign in again.', 'UNAUTHENTICATED')
+        if (user.role !== 'ADMIN') return fail('You are not allowed to change recruitment data.', 'FORBIDDEN')
+
+        if (!RECRUITMENT_STATUSES.includes(status)) return fail('Unknown recruitment status.', 'VALIDATION')
+
+        const existing = await this.recruitmentRepository.getDetail(id)
+        if (!existing) return fail('Recruitment not found.', 'NOT_FOUND')
+
+        const updated = await this.recruitmentRepository.updateStatus(id, status)
+        if (!updated) return fail('Could not update the recruitment status. Please try again.', 'INTERNAL')
+        return ok({ id: updated.id, status: updated.status })
     }
 
     // AB-11: field names must be neither empty nor duplicated (including built-in fields),

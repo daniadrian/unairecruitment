@@ -105,7 +105,8 @@ export default async function ApplyScreen({
                         }
                     >
                         <p>
-                            Each role accepts one application per person. You can follow its status in My
+                            Each role accepts one application per person, and a role stops accepting new
+                            applications once it{'’'}s closed. You can follow your existing applications in My
                             applications.
                         </p>
                     </EmptyRegister>

@@ -270,6 +270,7 @@ describe('ApplicantManagementController.handleExportCsv (UC-17, AB-15)', () => {
                 division: 'Other',
                 description: '',
                 requirements: '',
+                status: 'OPEN',
                 createdAt: new Date(),
                 updatedAt: new Date(),
                 fields: [

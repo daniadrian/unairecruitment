@@ -70,6 +70,14 @@ function CallToAction({
     const ctaClass = cn(buttonVariants({ size: 'xl' }), 'w-full')
 
     if (!viewer) {
+        // AB-04: no point sending a guest to sign in for a role that no longer accepts applications.
+        if (recruitment.status === 'CLOSED') {
+            return (
+                <p className="text-sm leading-[1.5] text-ink-soft">
+                    This role is closed and is no longer accepting applications.
+                </p>
+            )
+        }
         const next = encodeURIComponent(applyPath)
         return (
             <>
@@ -117,6 +125,15 @@ function CallToAction({
                     View in My applications
                 </Link>
             </>
+        )
+    }
+
+    // AB-04: guests and applicants without an existing application can no longer apply once closed.
+    if (recruitment.status === 'CLOSED') {
+        return (
+            <p className="text-sm leading-[1.5] text-ink-soft">
+                This role is closed and is no longer accepting applications.
+            </p>
         )
     }
 

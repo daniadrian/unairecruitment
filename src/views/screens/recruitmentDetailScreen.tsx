@@ -4,13 +4,16 @@ import { notFound } from 'next/navigation'
 import { ApplicationController } from '../../controllers/applicationController.ts'
 import { splitLines } from '../../utils/textFormat.ts'
 import HeroBand from '../components/brand/heroBand.tsx'
+import RecruitmentStatusTag from '../components/brand/recruitmentStatusTag.tsx'
 import { getViewer } from '../components/guards/getViewer.ts'
 import ApplyPanel from '../components/recruitments/applyPanel.tsx'
 import { loadRecruitmentDetail } from '../components/recruitments/loadRecruitmentDetail.ts'
 
 // Screen 02, UC-06 (AB-09: visible without signing in). The title and the apply action get the
 // strongest contrast: white title on the hero and a white apply panel that breaks through it.
-// Requirements are the admin's text split per line into a numbered list.
+// Requirements are the admin's text split per line into a numbered list. AB-04: a closed
+// recruitment still shows its page (direct links keep working); the hero flags it and ApplyPanel
+// swaps the CTA.
 
 const SELECTION_STAGES = [
     { title: 'Submit the form', text: 'Answer the questions for this role and attach your files.' },
@@ -52,10 +55,15 @@ export default async function RecruitmentDetailScreen({ recruitmentId }: { recru
                                 <li aria-current="page">{recruitment.title}</li>
                             </ol>
                         </nav>
-                        <span className="mt-2.5 inline-flex items-center gap-2 self-start rounded-sm border border-white/45 px-2.5 py-[5px] text-[13px] font-semibold text-white">
-                            <Megaphone aria-hidden="true" size={14} strokeWidth={2} />
-                            {recruitment.division}
-                        </span>
+                        <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                            <span className="inline-flex items-center gap-2 self-start rounded-sm border border-white/45 px-2.5 py-[5px] text-[13px] font-semibold text-white">
+                                <Megaphone aria-hidden="true" size={14} strokeWidth={2} />
+                                {recruitment.division}
+                            </span>
+                            {recruitment.status === 'CLOSED' ? (
+                                <RecruitmentStatusTag status="CLOSED" />
+                            ) : null}
+                        </div>
                         <h1 className="font-display text-[32px] leading-[1.1] font-medium tracking-[-0.02em] text-balance text-white lg:text-5xl lg:leading-[1.06]">
                             {recruitment.title}
                         </h1>

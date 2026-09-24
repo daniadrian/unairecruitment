@@ -41,6 +41,7 @@ function buildRecruitment(fields: RecruitmentField[] = []) {
         division: 'Product',
         description: 'Description',
         requirements: 'Requirements',
+        status: 'OPEN' as const,
         createdAt: new Date(),
         updatedAt: new Date(),
         fields,
@@ -448,6 +449,18 @@ describe('ApplicationController.submitApplication application rules (AB-03, AL-0
         if (result.ok) return
         expect(result.code).toBe('FORBIDDEN')
     })
+
+    it('rejects applying to a closed recruitment (AB-04)', async () => {
+        const { controller, recruitmentRepository, applicationRepository } = buildController()
+        recruitmentRepository.getDetail.mockResolvedValue({ ...buildRecruitment(), status: 'CLOSED' })
+
+        const result = await controller.submitApplication(validApplication())
+
+        expect(result.ok).toBe(false)
+        if (result.ok) return
+        expect(result.code).toBe('CONFLICT')
+        expect(applicationRepository.create).not.toHaveBeenCalled()
+    })
 })
 
 describe('ApplicationController.loadMyApplications (UC-08)', () => {
@@ -483,6 +496,17 @@ describe('ApplicationController.loadApplicationForm (UC-07)', () => {
     it('refuses to open the form when the applicant has already applied', async () => {
         const { controller, applicationRepository } = buildController()
         applicationRepository.existsByUserAndRecruitment.mockResolvedValue({ exists: true, error: null })
+
+        const result = await controller.loadApplicationForm('rec-1')
+
+        expect(result.ok).toBe(false)
+        if (result.ok) return
+        expect(result.code).toBe('CONFLICT')
+    })
+
+    it('refuses to open the form for a closed recruitment (AB-04)', async () => {
+        const { controller, recruitmentRepository } = buildController()
+        recruitmentRepository.getDetail.mockResolvedValue({ ...buildRecruitment(), status: 'CLOSED' })
 
         const result = await controller.loadApplicationForm('rec-1')
 

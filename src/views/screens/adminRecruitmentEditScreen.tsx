@@ -5,6 +5,7 @@ import { DashboardController } from '../../controllers/dashboardController.ts'
 import { formatDate } from '../../utils/dateFormat.ts'
 import AdminHeader from '../components/admin/adminHeader.tsx'
 import EditRecruitmentForm from '../components/admin/recruitmentForm/editRecruitmentForm.tsx'
+import RecruitmentStatusControl from '../components/admin/recruitmentStatusControl.tsx'
 import ShortRef from '../components/brand/shortRef.tsx'
 import Notice from '../components/feedback/notice.tsx'
 import { redirectOnFailure } from '../components/guards/redirectOnFailure.ts'
@@ -12,15 +13,19 @@ import { requireViewer } from '../components/guards/requireViewer.ts'
 import { loadRecruitmentDetail } from '../components/recruitments/loadRecruitmentDetail.ts'
 import type { FormAction } from '../../types/formAction.ts'
 import type { RecruitmentFormValues } from '../../types/recruitments/recruitmentFormValues.ts'
+import type { RecruitmentStatus } from '../../types/recruitmentStatus.ts'
 
 // Screen 10, UC-11: edit a recruitment and its custom fields. The ID is shown and cannot change
 // (AB-02). Changes only apply to new applications (AB-13), which the impact note explains.
+// AB-04: the aside also holds the open/close status control.
 export default async function AdminRecruitmentEditScreen({
     recruitmentId,
     saveAction,
+    statusAction,
 }: {
     recruitmentId: string
     saveAction: FormAction<{ id: string }>
+    statusAction: FormAction<{ id: string; status: RecruitmentStatus }>
 }) {
     const path = `/admin/recruitments/${recruitmentId}/edit`
     const [, recruitment, statistics] = await Promise.all([
@@ -141,6 +146,12 @@ export default async function AdminRecruitmentEditScreen({
                                 <dd className="text-ink">{formatDate(recruitment.updatedAt)}</dd>
                             </div>
                         </dl>
+                        <RecruitmentStatusControl
+                            recruitmentId={recruitment.id}
+                            title={recruitment.title}
+                            status={recruitment.status}
+                            action={statusAction}
+                        />
                         <Link
                             href={`/recruitments/${recruitment.id}`}
                             className="py-3.5 text-sm font-semibold"

@@ -1,6 +1,7 @@
 import type { ApplicationStatus } from '../types/applicationStatus.ts'
 import type { FieldCategory } from '../types/fieldCategory.ts'
 import type { FieldType } from '../types/fieldType.ts'
+import type { RecruitmentStatus } from '../types/recruitmentStatus.ts'
 
 // V-9: user-facing labels for enum values (the product language is English, see the
 // Project Profile in MVC_GUIDELINES.md). These maps are the single place where enum
@@ -24,4 +25,9 @@ export const APPLICATION_STATUS_LABELS: Record<ApplicationStatus, string> = {
     INTERVIEW: 'Interview',
     ACCEPTED: 'Accepted',
     REJECTED: 'Rejected',
+}
+
+export const RECRUITMENT_STATUS_LABELS: Record<RecruitmentStatus, string> = {
+    OPEN: 'Open',
+    CLOSED: 'Closed',
 }

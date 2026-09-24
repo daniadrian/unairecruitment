@@ -6,6 +6,7 @@ import type { RecruitmentFieldInput } from '../types/inputs/recruitmentFieldInpu
 import type { RecruitmentInput } from '../types/inputs/recruitmentInput.ts'
 import type { Recruitment } from '../models/entities/recruitment.ts'
 import type { RecruitmentDetail } from '../types/recruitments/recruitmentDetail.ts'
+import type { RecruitmentStatus } from '../types/recruitmentStatus.ts'
 import type { SessionUser } from '../types/auth/sessionUser.ts'
 
 // UC-09 to UC-11, AL-05.
@@ -19,6 +20,7 @@ const recruitmentRow = {
     division: 'Product',
     description: 'Description',
     requirements: 'Requirements',
+    status: 'OPEN' as const,
     createdAt: new Date(),
     updatedAt: new Date(),
 }
@@ -51,6 +53,12 @@ function buildController(sessionUser: SessionUser | null = admin) {
         create: vi.fn(async (_input: RecruitmentInput): Promise<Recruitment | null> => recruitmentRow),
         update: vi.fn(
             async (_id: string, _input: RecruitmentInput): Promise<Recruitment | null> => recruitmentRow,
+        ),
+        updateStatus: vi.fn(
+            async (_id: string, status: RecruitmentStatus): Promise<Recruitment | null> => ({
+                ...recruitmentRow,
+                status,
+            }),
         ),
     }
     const authRepository = { getSessionUser: vi.fn(async (): Promise<SessionUser | null> => sessionUser) }
@@ -206,5 +214,38 @@ describe('RecruitmentController.submitRecruitment edit mode (UC-11)', () => {
         expect(result.ok).toBe(true)
         expect(recruitmentRepository.update).toHaveBeenCalledOnce()
         expect(recruitmentRepository.create).not.toHaveBeenCalled()
+    })
+})
+
+describe('RecruitmentController.setStatus (AB-04)', () => {
+    it('rejects non-admins', async () => {
+        const { controller, recruitmentRepository } = buildController(applicant)
+        const result = await controller.setStatus('rec-1', 'CLOSED')
+
+        expect(result.ok).toBe(false)
+        if (result.ok) return
+        expect(result.code).toBe('FORBIDDEN')
+        expect(recruitmentRepository.updateStatus).not.toHaveBeenCalled()
+    })
+
+    it('rejects a recruitment that does not exist', async () => {
+        const { controller, recruitmentRepository } = buildController()
+        recruitmentRepository.getDetail.mockResolvedValue(null)
+
+        const result = await controller.setStatus('rec-x', 'CLOSED')
+
+        expect(result.ok).toBe(false)
+        if (result.ok) return
+        expect(result.code).toBe('NOT_FOUND')
+    })
+
+    it('closes an open recruitment', async () => {
+        const { controller, recruitmentRepository } = buildController()
+        const result = await controller.setStatus('rec-1', 'CLOSED')
+
+        expect(result.ok).toBe(true)
+        if (!result.ok) return
+        expect(result.data.status).toBe('CLOSED')
+        expect(recruitmentRepository.updateStatus).toHaveBeenCalledWith('rec-1', 'CLOSED')
     })
 })

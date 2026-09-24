@@ -3,8 +3,9 @@ import type { Recruitment } from '../entities/recruitment.ts'
 import type { RecruitmentField } from '../entities/recruitmentField.ts'
 import type { RecruitmentDetail } from '../../types/recruitments/recruitmentDetail.ts'
 import type { RecruitmentInput } from '../../types/inputs/recruitmentInput.ts'
+import type { RecruitmentStatus } from '../../types/recruitmentStatus.ts'
 
-// AB-04: there is no method to delete, close, or deactivate a recruitment.
+// AB-04: there is no method to delete a recruitment, but its status can be changed (updateStatus).
 
 type RecruitmentRow = {
     id: string
@@ -12,6 +13,7 @@ type RecruitmentRow = {
     division: string
     description: string
     requirements: string
+    status: RecruitmentStatus
     createdAt: Date
     updatedAt: Date
 }
@@ -33,6 +35,7 @@ function toRecruitment(row: RecruitmentRow): Recruitment {
         division: row.division,
         description: row.description,
         requirements: row.requirements,
+        status: row.status,
         createdAt: row.createdAt,
         updatedAt: row.updatedAt,
     }
@@ -59,6 +62,21 @@ export class RecruitmentRepository {
             return rows.map(toRecruitment)
         } catch (error) {
             console.error('Error listing recruitments:', error)
+            return []
+        }
+    }
+
+    // UC-05: the public "Openings" list only shows recruitments the admin has left open.
+    public async listOpen(): Promise<Recruitment[]> {
+        const prisma = getPrismaClient()
+        try {
+            const rows = await prisma.recruitment.findMany({
+                where: { status: 'OPEN' },
+                orderBy: { createdAt: 'desc' },
+            })
+            return rows.map(toRecruitment)
+        } catch (error) {
+            console.error('Error listing open recruitments:', error)
             return []
         }
     }
@@ -174,6 +192,18 @@ export class RecruitmentRepository {
             return toRecruitment(updated)
         } catch (error) {
             console.error('Error updating recruitment:', error)
+            return null
+        }
+    }
+
+    // AB-04: opens or closes a recruitment; does not touch its content or fields.
+    public async updateStatus(id: string, status: RecruitmentStatus): Promise<Recruitment | null> {
+        const prisma = getPrismaClient()
+        try {
+            const updated = await prisma.recruitment.update({ where: { id }, data: { status } })
+            return toRecruitment(updated)
+        } catch (error) {
+            console.error('Error updating recruitment status:', error)
             return null
         }
     }

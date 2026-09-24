@@ -57,6 +57,9 @@ export class ApplicationController {
 
         const recruitment = await this.recruitmentRepository.getDetail(recruitmentId)
         if (!recruitment) return fail('Recruitment not found.', 'NOT_FOUND')
+        if (recruitment.status === 'CLOSED') {
+            return fail('This recruitment is closed and is no longer accepting applications.', 'CONFLICT')
+        }
 
         const existing = await this.applicationRepository.existsByUserAndRecruitment(user.id, recruitmentId)
         if (existing.error) return fail('Could not check your previous applications. Please try again.', 'INTERNAL')
@@ -118,6 +121,9 @@ export class ApplicationController {
 
         const recruitment = await this.recruitmentRepository.getDetail(input.recruitmentId ?? '')
         if (!recruitment) return fail('Recruitment not found.', 'NOT_FOUND')
+        if (recruitment.status === 'CLOSED') {
+            return fail('This recruitment is closed and is no longer accepting applications.', 'CONFLICT')
+        }
 
         const duplicate = await this.applicationRepository.existsByUserAndRecruitment(
             user.id,

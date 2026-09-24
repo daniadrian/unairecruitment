@@ -9,8 +9,9 @@ import {
     DropdownMenuTrigger,
 } from '../ui/dropdownMenu.tsx'
 
-// The "More actions" menu of a recruitment row. Closing or deleting a recruitment does not exist
-// (AB-04), so it only offers the related pages.
+// The "More actions" menu of a recruitment row. Deleting a recruitment does not exist (AB-04);
+// opening/closing lives on the edit screen (RecruitmentStatusControl), so this menu only offers
+// the related pages.
 export default function RecruitmentRowMenu({
     recruitmentId,
     title,

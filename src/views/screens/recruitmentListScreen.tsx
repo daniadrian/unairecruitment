@@ -6,9 +6,10 @@ import OpeningsRegister from '../components/recruitments/openingsRegister.tsx'
 import type { OpeningItem } from '../../types/recruitments/openingItem.ts'
 
 // Screen 01, UC-05 (AB-09: visible without signing in). Gradient blue hero with the graticule,
-// then the register of open roles rising over it as a white sheet.
+// then the register of open roles rising over it as a white sheet. AB-04: only OPEN recruitments
+// are listed here; a closed one disappears from this page but its detail page still works.
 export default async function RecruitmentListScreen() {
-    const recruitments = await new RecruitmentController().loadRecruitments()
+    const recruitments = await new RecruitmentController().loadOpenRecruitments()
     const items: OpeningItem[] = recruitments.map((recruitment) => ({
         id: recruitment.id,
         title: recruitment.title,

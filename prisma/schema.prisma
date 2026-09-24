@@ -59,6 +59,14 @@ enum FileBucket {
     @@map("file_bucket")
 }
 
+// AB-04: a recruitment can be opened or closed by the admin to control whether it accepts new applications.
+enum RecruitmentStatus {
+    OPEN
+    CLOSED
+
+    @@map("recruitment_status")
+}
+
 model User {
     id            String   @id @default(uuid(7)) @db.Uuid
     name          String
@@ -109,20 +117,23 @@ model PasswordResetOtp {
     @@map("password_reset_otps")
 }
 
-// AB-02 and AB-04: unique IDs are generated automatically; recruitments are never deleted.
+// AB-02 and AB-04: unique IDs are generated automatically; recruitments are never deleted,
+// but can be opened or closed (status).
 model Recruitment {
-    id           String   @id @default(uuid(7)) @db.Uuid
+    id           String            @id @default(uuid(7)) @db.Uuid
     title        String
     division     String
     description  String
     requirements String
-    createdAt    DateTime @default(now()) @map("created_at")
-    updatedAt    DateTime @updatedAt @map("updated_at")
+    status       RecruitmentStatus @default(OPEN)
+    createdAt    DateTime          @default(now()) @map("created_at")
+    updatedAt    DateTime          @updatedAt @map("updated_at")
 
     fields       RecruitmentField[]
     applications Application[]
 
     @@index([createdAt])
+    @@index([status])
     @@map("recruitments")
 }
 

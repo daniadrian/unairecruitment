@@ -4,6 +4,7 @@ import { RecruitmentController } from '../../controllers/recruitmentController.t
 import { fail } from '../../utils/actionResult.ts'
 import type { ActionResult } from '../../types/actionResult.ts'
 import type { RecruitmentFieldInput } from '../../types/inputs/recruitmentFieldInput.ts'
+import type { RecruitmentStatus } from '../../types/recruitmentStatus.ts'
 
 // UC-10 and UC-11 adapter. Custom fields are sent as JSON in one hidden input
 // because their number is dynamic; the adapter only parses the transport, validation is in the controller.
@@ -42,5 +43,16 @@ export async function saveRecruitmentAction(
             fields,
         },
         id === '' ? null : id,
+    )
+}
+
+// UC-09 adapter (AB-04): opens or closes a recruitment.
+export async function updateRecruitmentStatusAction(
+    _prevState: ActionResult<{ id: string; status: RecruitmentStatus }> | null,
+    formData: FormData,
+): Promise<ActionResult<{ id: string; status: RecruitmentStatus }>> {
+    return new RecruitmentController().setStatus(
+        text(formData, 'id'),
+        text(formData, 'status') as RecruitmentStatus,
     )
 }
