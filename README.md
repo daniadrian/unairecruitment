@@ -2,7 +2,7 @@
 
 A web application for managing membership applicants: applicants view recruitment openings and submit applications, admins manage recruitments and update application status.
 
-This repository holds the full application: backend and the English web interface, built with Next.js on top of PostgreSQL (Supabase).
+This repository holds the full application: backend and web interface, built with Next.js on top of PostgreSQL (Supabase).
 
 ## Live Demo
 
@@ -199,7 +199,7 @@ Data reads (recruitment lists, details, applicant lists, dashboard) are done by 
 
 ## Interface
 
-The interface is in English. `/` sends admins to the dashboard and everyone else to the list of open roles.
+`/` sends admins to the dashboard and everyone else to the list of open roles.
 
 | Area      | Routes                                                                                                                                             | Who can open it |
 | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
@@ -249,7 +249,3 @@ As required for submission, here is a summary of how AI was used on this project
 | Item                        | Notes                                                                                                                                                                                                                       |
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Tool                          | Claude Code (Claude Opus 5 model).                                                                                                                                                                                          |
-| Scope                         | Writing internal design documents (requirements, use cases, scenarios, specifications, architecture, stack) and implementing the backend in this repository.                                                              |
-| How it was used               | The internal design documents were treated as the source of truth. The main instruction had the AI read all of them first, validate requirements against use cases, scenarios, architecture, and stack, report conflicts or gaps, and never make architectural decisions silently. |
-| Decisions kept with a human   | The monolith and MVC architecture, all stack choices, OTP and session policy, password policy, file size limits, and scope of work. Any parameter that wasn't already decided was asked about first, never assumed.       |
-| Verification                  | AI output was verified with typecheck, ESLint, layer-boundary audit, unit tests, integration tests, and a production build. Layer boundaries were also tested negatively with trial files to confirm the rule was actually active. |
