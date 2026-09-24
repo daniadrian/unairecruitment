@@ -1,0 +1,12 @@
+# `vercel deploy` uploads everything in this directory regardless of .gitignore when the
+# working tree has no git commits yet (observed 2026-09-24: .env* files were included in a
+# deployment's source snapshot despite being gitignored). This file is the explicit backstop.
+.env
+.env.*
+!.env.example
+
+# Reference material not needed in the deployment.
+perancangan/
+testcase/
+memori/
+ui-mockups/

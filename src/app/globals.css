@@ -1,0 +1,288 @@
+@import 'tailwindcss';
+
+/*
+ * Design system v2 (ui-mockups/UNAI Recruitment v2.dc.html, section "00 Design system").
+ * Every value is a tint or shade of the five brand colours. The single exception is the
+ * muted red of the Rejected status tag, which is never used for form errors or actions.
+ */
+@theme {
+    --color-*: initial;
+    --color-white: #ffffff;
+
+    /* Brand colours */
+    --color-primary: #4586c6;
+    --color-primary-bright: #5b92e5;
+    --color-secondary: #4981ce;
+    --color-teal: #008080;
+    --color-teal-ink: #006d6d;
+    --color-ink: #0e1b2a;
+
+    /* Derived tints and shades */
+    --color-ink-soft: #3b4f66;
+    --color-ink-faint: #54698a;
+    --color-link: #2b67a3;
+    --color-link-hover: #1e5288;
+    --color-page: #eef4fb;
+    --color-tint: #e3edf9;
+    --color-tint-deep: #dce8f7;
+    --color-hairline: #d3e0ef;
+    --color-rule: #c4d5e9;
+    --color-frame: #bccde0;
+    --color-field: #7390b8;
+    --color-sky: #9ec0e6;
+    --color-mist: #f6f9fd;
+    --color-row-hover: #f3f7fc;
+    --color-row-line: #e4ecf6;
+    --color-glow: #cfe0f7;
+    --color-disabled: #dce6f1;
+
+    /* Teal surfaces: secondary actions, accepted, successful uploads */
+    --color-teal-tint: #ddf0f0;
+    --color-teal-hover: #e0f0f0;
+    --color-teal-line: #86c2c2;
+    --color-teal-deep: #004f4f;
+
+    /* Admin layer (dark teal) */
+    --color-admin-nav: #0b2226;
+    --color-admin-deep: #0f2b30;
+    --color-admin-surface: #12363a;
+    --color-admin-teal: #287c7c;
+    --color-admin-line: #1d4a4f;
+    --color-admin-rule: #2f5e63;
+    --color-admin-outline: #3f7478;
+    --color-admin-muted: #bfdcdc;
+    --color-admin-soft: #ddefef;
+    --color-admin-accent: #5fb3b3;
+
+    /* Text on the gradient blue hero */
+    --color-hero-eyebrow: #dcebfb;
+    --color-hero-lead: #f2f7fd;
+    --color-hero-soft: #eaf2fc;
+
+    /* Status tags (StatusTag.dc.html) */
+    --color-pending-line: #6a88ae;
+    --color-pending-ink: #2e4b6b;
+    --color-interview-ink: #245a91;
+    --color-accepted-ink: #005e5e;
+    --color-rejected-line: #dfb2a5;
+    --color-rejected-bg: #f7e8e3;
+    --color-rejected-ink: #93381f;
+
+    /* Charts */
+    --color-chart-pending: #a9c7ea;
+
+    --radius-*: initial;
+    --radius-xs: 2px;
+    --radius-sm: 3px;
+    --radius-md: 4px;
+    --radius-lg: 6px;
+    --radius-full: 9999px;
+
+    /* Motion that answers a person's action: dialogs open, the OTP caret blinks. */
+    --animate-overlay-in: overlay-in 160ms ease-out;
+    --animate-dialog-in: dialog-in 180ms ease-out;
+    --animate-sheet-in: sheet-in 200ms ease-out;
+    --animate-caret-blink: caret-blink 1.1s ease-out infinite;
+
+    @keyframes overlay-in {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+
+    /* Only opacity and scale: the centring uses Tailwind's `translate` property, which composes
+       with `scale` but would be doubled by an animated `transform: translate(...)`. */
+    @keyframes dialog-in {
+        from {
+            opacity: 0;
+            scale: 0.98;
+        }
+        to {
+            opacity: 1;
+            scale: 1;
+        }
+    }
+
+    @keyframes sheet-in {
+        from {
+            transform: translateX(100%);
+        }
+        to {
+            transform: translateX(0);
+        }
+    }
+
+    @keyframes caret-blink {
+        0%,
+        70%,
+        100% {
+            opacity: 1;
+        }
+        20%,
+        50% {
+            opacity: 0;
+        }
+    }
+}
+
+/* next/font exposes the three families as CSS variables on <html> (src/app/layout.tsx). */
+@theme inline {
+    --font-display: var(--font-literata), Georgia, 'Times New Roman', serif;
+    --font-sans: var(--font-public-sans), system-ui, sans-serif;
+    --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+}
+
+@layer base {
+    /* The design is light only; native controls (date picker, scrollbars) follow it. */
+    html {
+        color-scheme: light;
+        background-color: var(--color-page);
+        color: var(--color-ink);
+        -webkit-text-size-adjust: 100%;
+        -webkit-tap-highlight-color: rgb(91 146 229 / 0.18);
+    }
+
+    /* No double-tap zoom delay on controls. */
+    a,
+    button,
+    input,
+    label,
+    select,
+    summary,
+    textarea,
+    [role='button'],
+    [role='radio'] {
+        touch-action: manipulation;
+    }
+
+    h1,
+    h2,
+    h3 {
+        text-wrap: balance;
+    }
+
+    /* Counts, dates, and sizes line up in tables and statistics. */
+    td,
+    th,
+    dd,
+    time {
+        font-variant-numeric: tabular-nums;
+    }
+
+    body {
+        min-height: 100dvh;
+        font-family: var(--font-sans);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    a {
+        color: var(--color-link);
+    }
+
+    a:hover {
+        color: var(--color-link-hover);
+    }
+
+    :focus-visible {
+        outline: 2px solid var(--color-primary-bright);
+        outline-offset: 2px;
+    }
+
+    ::selection {
+        background-color: var(--color-glow);
+        color: var(--color-ink);
+    }
+
+    /* Pages with a sticky bottom bar (save bar, mobile submit bar): keep focused controls and
+       anchors clear of it when the browser scrolls them into view. */
+    html:has([data-sticky-bottom-bar]) {
+        scroll-padding-bottom: 96px;
+    }
+
+    /* Native date input: keep the calendar button visible and on-brand. */
+    input[type='date']::-webkit-calendar-picker-indicator {
+        cursor: pointer;
+        opacity: 0.75;
+    }
+}
+
+/*
+ * View transitions (React <ViewTransition>, Next.js 16 guide "Designing view transitions").
+ * Forward/back slides for list <-> detail navigation, the header stays anchored, and
+ * content swaps within one route crossfade.
+ */
+::view-transition {
+    pointer-events: none;
+}
+
+::view-transition-group(site-header) {
+    animation: none;
+    z-index: 100;
+}
+
+::view-transition-old(site-header) {
+    display: none;
+}
+
+::view-transition-new(site-header) {
+    animation: none;
+}
+
+::view-transition-old(.nav-forward) {
+    --slide-offset: -48px;
+    animation:
+        140ms ease-in both vt-fade reverse,
+        320ms ease-in-out both vt-slide reverse;
+}
+
+::view-transition-new(.nav-forward) {
+    --slide-offset: 48px;
+    animation:
+        200ms ease-out 120ms both vt-fade,
+        320ms ease-in-out both vt-slide;
+}
+
+::view-transition-old(.nav-back) {
+    --slide-offset: 48px;
+    animation:
+        140ms ease-in both vt-fade reverse,
+        320ms ease-in-out both vt-slide reverse;
+}
+
+::view-transition-new(.nav-back) {
+    --slide-offset: -48px;
+    animation:
+        200ms ease-out 120ms both vt-fade,
+        320ms ease-in-out both vt-slide;
+}
+
+@keyframes vt-fade {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes vt-slide {
+    from {
+        translate: var(--slide-offset);
+    }
+    to {
+        translate: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-old(*),
+    ::view-transition-new(*),
+    ::view-transition-group(*) {
+        animation-duration: 0s !important;
+        animation-delay: 0s !important;
+    }
+}

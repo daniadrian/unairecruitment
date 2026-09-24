@@ -1,0 +1,211 @@
+// UNAI Recruitment database schema.
+// Entities and their relations follow memori/05-arsitektur-sistem.md section 4.2.
+// Model and field names are camelCase (language style); table and column names are snake_case.
+
+generator client {
+    provider = "prisma-client"
+    output   = "./generated/client"
+}
+
+// Prisma 7: the connection URL is no longer written here.
+// The runtime uses the `pg` adapter in src/libs/prisma.ts (DATABASE_URL, transaction pooler),
+// while Migrate uses prisma.config.ts (DIRECT_URL, session pooler). See KS-04.
+datasource db {
+    provider = "postgresql"
+}
+
+// AB-08: Applicant and Recruitment Admin roles.
+enum UserRole {
+    APPLICANT
+    ADMIN
+
+    @@map("user_role")
+}
+
+// AB-01: Pending -> Interview -> Accepted / Rejected.
+enum ApplicationStatus {
+    PENDING
+    INTERVIEW
+    ACCEPTED
+    REJECTED
+
+    @@map("application_status")
+}
+
+// AB-11: custom field types (Text, Choice, Number, Date, File Upload).
+enum FieldType {
+    TEXT
+    CHOICE
+    NUMBER
+    DATE
+    FILE
+
+    @@map("field_type")
+}
+
+// AB-11: custom field categories (Required, Optional).
+enum FieldCategory {
+    REQUIRED
+    OPTIONAL
+
+    @@map("field_category")
+}
+
+// KS-06: private buckets `cv` and `attachments`.
+enum FileBucket {
+    CV
+    ATTACHMENTS
+
+    @@map("file_bucket")
+}
+
+model User {
+    id            String   @id @default(uuid(7)) @db.Uuid
+    name          String
+    email         String   @unique
+    // Contact number is required when an applicant registers; the seeded admin account has none (01 section 4.2).
+    contactNumber String?  @map("contact_number")
+    passwordHash  String   @map("password_hash")
+    role          UserRole @default(APPLICANT)
+    createdAt     DateTime @default(now()) @map("created_at")
+
+    sessions     Session[]
+    otps         PasswordResetOtp[]
+    applications Application[]
+    files        StoredFile[]
+
+    @@map("users")
+}
+
+// KA-07: database-backed sessions; only the token hash is stored.
+model Session {
+    id        String   @id @default(uuid(7)) @db.Uuid
+    userId    String   @map("user_id") @db.Uuid
+    tokenHash String   @unique @map("token_hash")
+    expiresAt DateTime @map("expires_at")
+    createdAt DateTime @default(now()) @map("created_at")
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@index([userId])
+    @@index([expiresAt])
+    @@map("sessions")
+}
+
+// AB-06 and AB-16: 6-digit OTP, valid for 10 minutes, single use, at most 5 wrong attempts.
+// The (userId, createdAt) index serves the 60-second cooldown and the 5-requests-per-hour quota.
+model PasswordResetOtp {
+    id        String    @id @default(uuid(7)) @db.Uuid
+    userId    String    @map("user_id") @db.Uuid
+    codeHash  String    @map("code_hash")
+    expiresAt DateTime  @map("expires_at")
+    usedAt    DateTime? @map("used_at")
+    attempts  Int       @default(0)
+    createdAt DateTime  @default(now()) @map("created_at")
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@index([userId, createdAt])
+    @@map("password_reset_otps")
+}
+
+// AB-02 and AB-04: unique IDs are generated automatically; recruitments are never deleted.
+model Recruitment {
+    id           String   @id @default(uuid(7)) @db.Uuid
+    title        String
+    division     String
+    description  String
+    requirements String
+    createdAt    DateTime @default(now()) @map("created_at")
+    updatedAt    DateTime @updatedAt @map("updated_at")
+
+    fields       RecruitmentField[]
+    applications Application[]
+
+    @@index([createdAt])
+    @@map("recruitments")
+}
+
+// AB-11: custom field definitions per recruitment; names are unique within a recruitment.
+model RecruitmentField {
+    id            String        @id @default(uuid(7)) @db.Uuid
+    recruitmentId String        @map("recruitment_id") @db.Uuid
+    name          String
+    type          FieldType
+    category      FieldCategory
+    options       String[]      @default([])
+    position      Int
+
+    recruitment Recruitment         @relation(fields: [recruitmentId], references: [id], onDelete: Cascade)
+    answers     ApplicationAnswer[]
+
+    @@unique([recruitmentId, name])
+    @@index([recruitmentId, position])
+    @@map("recruitment_fields")
+}
+
+// AB-03: one application per applicant and recruitment pair.
+// AB-05: name, email, and contact number are copied into the application because applicants may re-enter them.
+model Application {
+    id            String            @id @default(uuid(7)) @db.Uuid
+    userId        String            @map("user_id") @db.Uuid
+    recruitmentId String            @map("recruitment_id") @db.Uuid
+    name          String
+    email         String
+    contactNumber String            @map("contact_number")
+    motivation    String
+    cvFileId      String?           @unique @map("cv_file_id") @db.Uuid
+    status        ApplicationStatus @default(PENDING)
+    submittedAt   DateTime          @default(now()) @map("submitted_at")
+
+    user        User                @relation(fields: [userId], references: [id], onDelete: Restrict)
+    recruitment Recruitment         @relation(fields: [recruitmentId], references: [id], onDelete: Restrict)
+    cvFile      StoredFile?         @relation("ApplicationCv", fields: [cvFileId], references: [id], onDelete: Restrict)
+    answers     ApplicationAnswer[]
+
+    @@unique([userId, recruitmentId])
+    @@index([recruitmentId])
+    @@index([status])
+    @@index([submittedAt])
+    @@map("applications")
+}
+
+// AB-13: answers store a snapshot of the field name, type, and order at submission time,
+// so older applications still display as submitted even if the field definition is changed or deleted.
+model ApplicationAnswer {
+    id            String    @id @default(uuid(7)) @db.Uuid
+    applicationId String    @map("application_id") @db.Uuid
+    fieldId       String?   @map("field_id") @db.Uuid
+    fieldName     String    @map("field_name")
+    fieldType     FieldType @map("field_type")
+    value         String?
+    fileId        String?   @unique @map("file_id") @db.Uuid
+    position      Int
+
+    application Application       @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+    field       RecruitmentField? @relation(fields: [fieldId], references: [id], onDelete: SetNull)
+    file        StoredFile?       @relation("AnswerFile", fields: [fileId], references: [id], onDelete: Restrict)
+
+    @@index([applicationId, position])
+    @@map("application_answers")
+}
+
+// AB-14 and AB-15: file metadata; the content lives in Supabase Storage.
+// Orphaned files (not referenced by any application) are removed by the daily cron.
+model StoredFile {
+    id           String     @id @default(uuid(7)) @db.Uuid
+    ownerId      String     @map("owner_id") @db.Uuid
+    bucket       FileBucket
+    objectPath   String     @unique @map("object_path")
+    originalName String     @map("original_name")
+    mimeType     String     @map("mime_type")
+    sizeBytes    Int        @map("size_bytes")
+    createdAt    DateTime   @default(now()) @map("created_at")
+
+    owner    User               @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+    cvOf     Application?       @relation("ApplicationCv")
+    answerOf ApplicationAnswer? @relation("AnswerFile")
+
+    @@index([ownerId, createdAt])
+    @@map("stored_files")
+}
